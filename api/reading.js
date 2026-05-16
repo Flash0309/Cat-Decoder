@@ -101,6 +101,7 @@ async function requestReadingFromModel({ apiKey, baseUrl, model, payload }) {
     body: JSON.stringify({
       model,
       temperature: 0.8,
+      max_tokens: 1400,
       response_format: { type: "json_object" },
       messages: buildMessages(payload)
     })
@@ -133,14 +134,15 @@ function buildMessages(payload) {
         "不要神神叨叨，不要恐吓，不要长篇空话。",
         "必须严格返回 JSON，不要返回 markdown，不要返回代码块。",
         "输出字段必须只有 overall、cards、summary、oneLiner。",
-        "cards 必须是长度为 3 的数组，每项都包含 role、title、orientationMeaning、meaning、questionMeaning、advice。"
+        "cards 必须是长度为 3 的数组，每项都包含 role、title、orientationMeaning、meaning、questionMeaning、advice。",
+        "每个字符串字段控制在 1 到 3 句，完整说完，不要截断。"
       ].join(" ")
     },
     {
       role: "user",
       content: JSON.stringify({
         instruction:
-          "请先解释正位/逆位的意思，再说明牌面代表什么、对这个问题意味着什么、要注意什么。语气像聪明一点的朋友，不要端着。",
+          "请先解释正位/逆位的意思，再说明牌面代表什么、对这个问题意味着什么、要注意什么。语气像聪明一点的朋友，不要端着。避免空话，直接回答问题。",
         tone: payload.tone,
         spread: payload.spread,
         pet: payload.pet,
