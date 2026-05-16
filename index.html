@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>有点喵数</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">PET TAROT STUDIO</p>
+          <h1>有点喵数</h1>
+          <p class="hero-text">
+            上传毛孩子照片，问一个你最近很在意的问题，抽三张牌，看看你家主子今天到底想提醒你什么。
+          </p>
+          <div class="hero-badges">
+            <span>猫猫狗狗都可以</span>
+            <span>轻松版塔罗</span>
+            <span>三张牌解读</span>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="moon"></div>
+          <div class="pet pet-cat">
+            <span class="ear ear-left"></span>
+            <span class="ear ear-right"></span>
+            <span class="face"></span>
+          </div>
+          <div class="pet pet-dog">
+            <span class="ear ear-left"></span>
+            <span class="ear ear-right"></span>
+            <span class="face"></span>
+          </div>
+          <div class="spark spark-one"></div>
+          <div class="spark spark-two"></div>
+          <div class="spark spark-three"></div>
+        </div>
+      </header>
+
+      <main class="content-grid">
+        <section class="panel form-panel">
+          <div class="panel-heading">
+            <p class="step-tag">STEP 1</p>
+            <h2>带上你家毛孩子</h2>
+            <p>先上传照片，再把问题交给三张牌。</p>
+          </div>
+
+          <div class="uploader">
+            <label class="upload-box" for="petPhoto">
+              <input id="petPhoto" type="file" accept="image/*" />
+              <img id="photoPreview" alt="宠物照片预览" hidden />
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <span class="upload-icon">+</span>
+                <strong>上传宠物照片</strong>
+                <small>支持猫猫、狗狗，或者任何自认有灵气的小朋友</small>
+              </div>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>你想问什么？</span>
+            <textarea
+              id="questionInput"
+              rows="4"
+              maxlength="120"
+              placeholder="比如：它最近为什么老盯着门口发呆？或者：我和它最近的相处状态怎么样？"
+            ></textarea>
+          </label>
+
+          <div class="actions">
+            <button id="drawButton" class="primary-button" type="button">抽三张牌</button>
+            <button id="resetButton" class="ghost-button" type="button">重新来一卦</button>
+          </div>
+
+          <p class="helper-text" id="statusText">
+            小提示：正位代表这股能量比较顺，逆位不是坏事，只是说明有点别扭、卡住，或者还没用对劲。
+          </p>
+        </section>
+
+        <section class="panel result-panel">
+          <div class="panel-heading">
+            <p class="step-tag">STEP 2</p>
+            <h2>今日牌面</h2>
+            <p>三张牌会从 22 张主牌里随机抽出，不重复。</p>
+          </div>
+
+          <div class="reading-meta">
+            <div class="pet-chip" id="petChip">
+              <div class="pet-chip-avatar" id="petChipAvatar">爪</div>
+              <div>
+                <strong>还没上传照片</strong>
+                <p>上传后这里会显示你家毛孩子的专属头像</p>
+              </div>
+            </div>
+            <div class="question-card">
+              <span>本次问题</span>
+              <p id="questionEcho">你还没提问，牌堆正在假装听不见。</p>
+            </div>
+          </div>
+
+          <div class="cards-grid" id="cardsGrid">
+            <article class="tarot-card placeholder-card">
+              <div class="card-topline">等待抽牌</div>
+              <div class="card-icon">✦</div>
+              <h3>今天会抽到哪三张？</h3>
+              <p>也许是提醒你冷静一点，也许是催你别再犹豫了。</p>
+            </article>
+          </div>
+
+          <div class="reading-output" id="readingOutput">
+            <div class="empty-state">
+              <h3>解牌区待命中</h3>
+              <p>先上传照片、输入问题，再点击“抽三张牌”。</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="cardTemplate">
+      <article class="tarot-card">
+        <div class="card-topline"></div>
+        <div class="card-icon"></div>
+        <h3 class="card-title"></h3>
+        <p class="card-orientation"></p>
+        <p class="card-keywords"></p>
+      </article>
+    </template>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
