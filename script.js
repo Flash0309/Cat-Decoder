@@ -332,9 +332,8 @@ const tarotDeck = [
 ];
 
 const cardRoles = ["现状", "阻碍", "建议"];
-// Fill this with your backend endpoint later, for example: "https://your-app.vercel.app/api/reading".
 // Keep API keys on the backend only. The frontend sends card data and receives formatted reading text.
-const AI_READING_ENDPOINT = "";
+const AI_READING_ENDPOINT = "https://project-hp60t.vercel.app/api/reading";
 
 const photoInput = document.querySelector("#petPhoto");
 const photoPreview = document.querySelector("#photoPreview");
