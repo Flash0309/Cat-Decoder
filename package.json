@@ -1,0 +1,12 @@
+{
+  "name": "cat-decoder",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pet tarot reading site and API",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

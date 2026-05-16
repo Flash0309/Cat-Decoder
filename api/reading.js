@@ -7,7 +7,7 @@ const CORS_HEADERS = {
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-4.1-mini";
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   setCorsHeaders(res);
 
   if (req.method === "OPTIONS") {
@@ -43,7 +43,10 @@ module.exports = async function handler(req, res) {
     const message = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({ error: message });
   }
-};
+}
+
+module.exports = handler;
+module.exports.handler = handler;
 
 function setCorsHeaders(res) {
   Object.entries(CORS_HEADERS).forEach(([key, value]) => {
