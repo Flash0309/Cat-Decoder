@@ -92,28 +92,28 @@ function normalizeIncomingPayload(body) {
 }
 
 async function requestReadingFromModel({ apiKey, baseUrl, model, payload }) {
-  const primary = await fetchReading({
-    apiKey,
-    baseUrl,
-    model,
-    payload,
-    compact: false
-  });
+  const localReading = buildLocalReading(payload);
 
-  if (!looksTruncated(primary)) {
-    return primary;
+  try {
+    const aiSummary = await fetchAiSummary({
+      apiKey,
+      baseUrl,
+      model,
+      payload,
+      localReading
+    });
+
+    return {
+      ...localReading,
+      ...aiSummary
+    };
+  } catch (error) {
+    console.warn("AI summary failed, using local reading:", error);
+    return localReading;
   }
-
-  return fetchReading({
-    apiKey,
-    baseUrl,
-    model,
-    payload,
-    compact: true
-  });
 }
 
-async function fetchReading({ apiKey, baseUrl, model, payload, compact }) {
+async function fetchAiSummary({ apiKey, baseUrl, model, payload, localReading }) {
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -122,10 +122,10 @@ async function fetchReading({ apiKey, baseUrl, model, payload, compact }) {
     },
     body: JSON.stringify({
       model,
-      temperature: compact ? 0.5 : 0.8,
-      max_tokens: compact ? 900 : 1800,
+      temperature: 0.5,
+      max_tokens: 500,
       response_format: { type: "json_object" },
-      messages: buildMessages(payload, compact)
+      messages: buildSummaryMessages(payload, localReading)
     })
   });
 
@@ -142,52 +142,43 @@ async function fetchReading({ apiKey, baseUrl, model, payload, compact }) {
   }
 
   const parsed = safeJsonParse(content);
-  validateOutgoingShape(parsed);
+  validateSummaryShape(parsed);
+
+  if (looksTruncatedSummary(parsed)) {
+    throw new Error("AI summary appears truncated.");
+  }
+
   return parsed;
 }
 
-function buildMessages(payload, compact) {
+function buildSummaryMessages(payload, localReading) {
   return [
     {
       role: "system",
       content: [
         "你是一个宠物塔罗解牌助手。",
-        "你的任务是根据用户问题和三张塔罗牌，输出轻松幽默、通俗易懂的中文解读。",
-        "不要神神叨叨，不要恐吓，不要长篇空话。",
+        "你的任务是只补充整体解读，不要逐张解释牌。",
         "必须严格返回 JSON，不要返回 markdown，不要返回代码块。",
-        "输出字段必须只有 overall、cards、summary、oneLiner。",
-        "cards 必须是长度为 3 的数组，每项都包含 role、title、orientationMeaning、meaning、questionMeaning、advice。",
-        compact
-          ? "所有字段必须短。overall、summary、oneLiner 各 1 句。每张牌的 4 个说明字段各 1 句，每句尽量不超过 35 个汉字。"
-          : "每个字符串字段控制在 1 到 3 句，完整说完，不要截断。"
+        "输出字段必须只有 overall、summary、oneLiner。",
+        "每个字段只写一句完整中文，句末必须有句号、问号或感叹号。",
+        "不要输出 cards 字段。"
       ].join(" ")
     },
     {
       role: "user",
       content: JSON.stringify({
-        instruction:
-          compact
-            ? "直接回答问题。严格简短，每个字段只写完整的一句话。"
-            : "请先解释正位/逆位的意思，再说明牌面代表什么、对这个问题意味着什么、要注意什么。语气像聪明一点的朋友，不要端着。避免空话，直接回答问题。",
-        tone: payload.tone,
-        spread: payload.spread,
-        pet: payload.pet,
+        instruction: "根据问题和三张牌，输出 overall、summary、oneLiner。直接回答问题，轻松但不要空泛。",
         question: payload.question,
         cards: payload.cards,
+        fallbackReading: {
+          overall: localReading.overall,
+          summary: localReading.summary,
+          oneLiner: localReading.oneLiner
+        },
         responseShape: {
-          overall: "整体气氛说明",
-          cards: [
-            {
-              role: "现状",
-              title: "愚者 正位",
-              orientationMeaning: "正位/逆位说明",
-              meaning: "这张牌代表什么",
-              questionMeaning: "对问题意味着什么",
-              advice: "要注意什么"
-            }
-          ],
-          summary: "三张牌合起来怎么说",
-          oneLiner: "一句轻松总结"
+          overall: "一句整体气氛说明。",
+          summary: "一句合牌总结。",
+          oneLiner: "一句轻松总结。"
         }
       })
     }
@@ -206,6 +197,10 @@ function safeJsonParse(content) {
   }
 }
 
+function looksTruncatedSummary(data) {
+  return [data.overall, data.summary, data.oneLiner].some((value) => looksTruncatedText(value));
+}
+
 function looksTruncated(data) {
   const values = [
     data.overall,
@@ -220,19 +215,21 @@ function looksTruncated(data) {
     ])
   ];
 
-  return values.some((value) => {
-    const text = String(value || "").trim();
-    if (!text) {
-      return true;
-    }
-
-    const hasEnding = /[。！？.!?」』】]$/.test(text);
-    const tooAbrupt = /[，、：；]$/.test(text);
-    return !hasEnding || tooAbrupt;
-  });
+  return values.some((value) => looksTruncatedText(value));
 }
 
-function validateOutgoingShape(data) {
+function looksTruncatedText(value) {
+  const text = String(value || "").trim();
+  if (!text) {
+    return true;
+  }
+
+  const hasEnding = /[。！？.!?」』】]$/.test(text);
+  const tooAbrupt = /[，、：；]$/.test(text);
+  return !hasEnding || tooAbrupt;
+}
+
+function validateSummaryShape(data) {
   if (!data || typeof data !== "object") {
     throw new Error("Response JSON must be an object.");
   }
@@ -240,6 +237,10 @@ function validateOutgoingShape(data) {
   if (!data.overall || !data.summary || !data.oneLiner) {
     throw new Error("Response JSON is missing top-level fields.");
   }
+}
+
+function validateOutgoingShape(data) {
+  validateSummaryShape(data);
 
   if (!Array.isArray(data.cards) || data.cards.length !== 3) {
     throw new Error("Response JSON must include 3 cards.");
@@ -259,4 +260,78 @@ function validateOutgoingShape(data) {
       throw new Error(`Card ${index + 1} is missing required fields.`);
     }
   });
+}
+
+function buildLocalReading(payload) {
+  const cards = payload.cards.map((card) => ({
+    role: card.role,
+    title: `${card.name} ${card.orientation}`,
+    orientationMeaning: getOrientationMeaning(card.orientation),
+    meaning: ensureSentence(card.baseMeaning || `这张牌的关键词是：${card.keywords}`),
+    questionMeaning: buildQuestionMeaning(payload.question, card),
+    advice: ensureSentence(card.baseAdvice || "先观察具体表现，再做判断。")
+  }));
+
+  const names = payload.cards.map((card) => `${card.name}${card.orientation}`).join("、");
+  const positiveCards = payload.cards.filter((card) => card.orientation.includes("正")).length;
+  const isPetLikeQuestion = /喜欢|爱|亲|依赖|信任|主人|讨厌|关系/.test(payload.question);
+
+  const overall = isPetLikeQuestion
+    ? positiveCards >= 2
+      ? "整体看，它对现在的主人是有亲近感的，但具体表现可能没有人类想象得那么直白。"
+      : "整体看，它的态度不是简单的喜欢或不喜欢，更像是需要时间确认安全感。"
+    : `整体看，${names} 这组三张牌提示你先看清关系状态，再决定下一步。`;
+
+  const summary = isPetLikeQuestion
+    ? `结合 ${names}，这件事更偏向“有好感和连接”，但不要只靠单个动作下结论。`
+    : `结合 ${names}，这组牌建议你把现状、阻碍和行动建议分开看。`;
+
+  const oneLiner = isPetLikeQuestion
+    ? "一句话：它大概率不是不喜欢，只是表达方式可能比较有自己的节奏。"
+    : "一句话：先别急着下结论，把最明确的信号抓住。";
+
+  const reading = {
+    overall,
+    cards,
+    summary,
+    oneLiner
+  };
+
+  validateOutgoingShape(reading);
+  return reading;
+}
+
+function getOrientationMeaning(orientation) {
+  if (String(orientation).includes("正")) {
+    return "正位表示这张牌的能量比较顺，事情更容易自然推进。";
+  }
+
+  return "逆位不是坏事，通常表示这股能量有点卡住，需要慢一点看清。";
+}
+
+function buildQuestionMeaning(question, card) {
+  const keywords = card.keywords || card.name;
+
+  if (/喜欢|爱|亲|依赖|信任|主人|讨厌|关系/.test(question)) {
+    if (card.role === "现状") {
+      return `放到这个问题里，“${keywords}”说明它和主人之间已经有明显连接。`;
+    }
+
+    if (card.role === "阻碍") {
+      return "这张牌提醒你，别把短暂冷淡或小动作直接理解成不喜欢。";
+    }
+
+    return "建议你用稳定陪伴和具体互动去验证感情，而不是只靠猜。";
+  }
+
+  return `放到“${question}”里看，重点在“${keywords}”这几个信号上。`;
+}
+
+function ensureSentence(text) {
+  const value = String(text || "").trim();
+  if (!value) {
+    return "先观察具体表现，再做判断。";
+  }
+
+  return /[。！？.!?」』】]$/.test(value) ? value : `${value}。`;
 }
