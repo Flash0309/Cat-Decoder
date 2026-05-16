@@ -105,7 +105,9 @@ async function requestReadingFromModel({ apiKey, baseUrl, model, payload }) {
 
     return {
       ...localReading,
-      ...aiSummary
+      overall: aiSummary.overall,
+      summary: aiSummary.summary,
+      oneLiner: aiSummary.oneLiner
     };
   } catch (error) {
     console.warn("AI summary failed, using local reading:", error);
