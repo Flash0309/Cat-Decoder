@@ -325,28 +325,51 @@ body::before {
   margin-top: 20px;
 }
 
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+  margin-top: 2px;
+}
+
 .field span {
   display: block;
   margin-bottom: 10px;
   font-weight: 700;
 }
 
+input,
+select,
 textarea {
   width: 100%;
-  resize: vertical;
-  min-height: 132px;
-  padding: 16px 18px;
+  min-height: 52px;
+  padding: 0 18px;
   border-radius: 18px;
   border: 1px solid rgba(46, 34, 27, 0.12);
   background: rgba(255, 255, 255, 0.92);
   font: inherit;
   color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 132px;
+  padding: 16px 18px;
   line-height: 1.8;
 }
 
+input:focus,
+select:focus,
 textarea:focus {
   outline: 2px solid rgba(216, 107, 75, 0.24);
   border-color: rgba(216, 107, 75, 0.3);
+}
+
+.field-note {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .actions {
@@ -438,6 +461,10 @@ button {
   line-height: 1.6;
 }
 
+.pet-chip p {
+  white-space: pre-line;
+}
+
 .question-card {
   padding: 16px;
   border-radius: 20px;
@@ -458,9 +485,9 @@ button {
 }
 
 .tarot-card {
-  min-height: 260px;
+  min-height: 382px;
   padding: 18px;
-  border-radius: 24px;
+  border-radius: 8px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(54, 39, 28, 0.08);
@@ -470,27 +497,54 @@ button {
   content: "";
   position: absolute;
   inset: 10px;
-  border-radius: 18px;
+  border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.38);
   pointer-events: none;
 }
 
 .card-topline {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: rgba(255, 249, 241, 0.86);
   text-transform: uppercase;
 }
 
+.card-arcana {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 247, 236, 0.86);
+}
+
+.card-illustration {
+  margin-top: 16px;
+  min-height: 162px;
+  padding: 14px 14px 12px;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
+    rgba(24, 20, 18, 0.16);
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
 .card-icon {
-  margin-top: 14px;
-  font-size: 52px;
+  font-size: 58px;
+  line-height: 1;
+}
+
+.card-scene {
+  margin: 0;
+  color: rgba(255, 248, 238, 0.92);
+  line-height: 1.55;
+  font-size: 14px;
 }
 
 .tarot-card h3 {
   margin: 16px 0 10px;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.1;
 }
 
@@ -562,6 +616,10 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero-art {
     min-height: 240px;
   }
@@ -598,5 +656,9 @@ button {
   .pet {
     transform: scale(0.85);
     transform-origin: bottom;
+  }
+
+  .tarot-card {
+    min-height: 344px;
   }
 }

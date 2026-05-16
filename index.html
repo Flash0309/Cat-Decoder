@@ -44,7 +44,7 @@
           <div class="panel-heading">
             <p class="step-tag">STEP 1</p>
             <h2>带上你家毛孩子</h2>
-            <p>先上传照片，再把问题交给三张牌。</p>
+            <p>先补全宠物档案，再把问题交给三张牌。</p>
           </div>
 
           <div class="uploader">
@@ -56,6 +56,34 @@
                 <strong>上传宠物照片</strong>
                 <small>支持猫猫、狗狗，或者任何自认有灵气的小朋友</small>
               </div>
+            </label>
+          </div>
+
+          <div class="profile-grid">
+            <label class="field">
+              <span>名字</span>
+              <input id="petNameInput" type="text" maxlength="20" placeholder="比如：奶油、七七、Lucky" />
+            </label>
+
+            <label class="field">
+              <span>性别</span>
+              <select id="petGenderInput">
+                <option value="">请选择</option>
+                <option value="男孩子">男孩子</option>
+                <option value="女孩子">女孩子</option>
+                <option value="不确定">不确定</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>生日</span>
+              <input id="petBirthdayInput" type="date" />
+              <small class="field-note">如果不清楚真实生日，按接回家那天填也可以。</small>
+            </label>
+
+            <label class="field">
+              <span>品种</span>
+              <input id="petBreedInput" type="text" maxlength="30" placeholder="比如：布偶、金毛、田园猫" />
             </label>
           </div>
 
@@ -83,7 +111,7 @@
           <div class="panel-heading">
             <p class="step-tag">STEP 2</p>
             <h2>今日牌面</h2>
-            <p>三张牌会从 22 张主牌里随机抽出，不重复。</p>
+            <p>三张牌会从完整 78 张牌里随机抽出，不重复。</p>
           </div>
 
           <div class="reading-meta">
@@ -91,7 +119,7 @@
               <div class="pet-chip-avatar" id="petChipAvatar">爪</div>
               <div>
                 <strong>还没上传照片</strong>
-                <p>上传后这里会显示你家毛孩子的专属头像</p>
+                <p>上传照片并补全资料后，这里会显示你家毛孩子的专属档案。</p>
               </div>
             </div>
             <div class="question-card">
@@ -122,13 +150,18 @@
     <template id="cardTemplate">
       <article class="tarot-card">
         <div class="card-topline"></div>
-        <div class="card-icon"></div>
+        <div class="card-arcana"></div>
+        <div class="card-illustration">
+          <div class="card-icon"></div>
+          <p class="card-scene"></p>
+        </div>
         <h3 class="card-title"></h3>
         <p class="card-orientation"></p>
         <p class="card-keywords"></p>
       </article>
     </template>
 
+    <script src="./tarot-data.js"></script>
     <script src="./script.js"></script>
   </body>
 </html>

@@ -78,11 +78,19 @@ function normalizeIncomingPayload(body) {
         "中文，轻松幽默，通俗易懂。先解释正位/逆位，再解释牌面代表什么、意味着什么、要注意什么。"
     ),
     pet: {
+      name: String((body.pet && body.pet.name) || "").trim(),
+      gender: String((body.pet && body.pet.gender) || "").trim(),
+      birthday: String((body.pet && body.pet.birthday) || "").trim(),
+      breed: String((body.pet && body.pet.breed) || "").trim(),
+      birthdayNote: String((body.pet && body.pet.birthdayNote) || "").trim(),
       hasPhoto: Boolean(body.pet && body.pet.hasPhoto)
     },
     cards: cards.map((card) => ({
       role: String(card.role || "").trim(),
       name: String(card.name || "").trim(),
+      arcana: String(card.arcana || "").trim(),
+      suit: String(card.suit || "").trim(),
+      rank: String(card.rank || "").trim(),
       orientation: String(card.orientation || "").trim(),
       keywords: String(card.keywords || "").trim(),
       baseMeaning: String(card.baseMeaning || "").trim(),
@@ -171,6 +179,7 @@ function buildSummaryMessages(payload, localReading) {
       content: JSON.stringify({
         instruction: "根据问题和三张牌，输出 overall、summary、oneLiner。直接回答问题，轻松但不要空泛。",
         question: payload.question,
+        pet: payload.pet,
         cards: payload.cards,
         fallbackReading: {
           overall: localReading.overall,
@@ -265,12 +274,14 @@ function validateOutgoingShape(data) {
 }
 
 function buildLocalReading(payload) {
+  const petIntro = buildPetIntro(payload.pet);
+  const petSubject = buildPetSubject(payload.pet);
   const cards = payload.cards.map((card) => ({
     role: card.role,
     title: `${card.name} ${card.orientation}`,
     orientationMeaning: getOrientationMeaning(card.orientation),
     meaning: ensureSentence(card.baseMeaning || `这张牌的关键词是：${card.keywords}`),
-    questionMeaning: buildQuestionMeaning(payload.question, card),
+    questionMeaning: buildQuestionMeaning(payload.question, card, payload.pet),
     advice: ensureSentence(card.baseAdvice || "先观察具体表现，再做判断。")
   }));
 
@@ -280,13 +291,13 @@ function buildLocalReading(payload) {
 
   const overall = isPetLikeQuestion
     ? positiveCards >= 2
-      ? "整体看，它对现在的主人是有亲近感的，但具体表现可能没有人类想象得那么直白。"
-      : "整体看，它的态度不是简单的喜欢或不喜欢，更像是需要时间确认安全感。"
-    : `整体看，${names} 这组三张牌提示你先看清关系状态，再决定下一步。`;
+      ? `整体看，${petSubject}和当下的人与环境是有亲近感的，只是表达不会像人类想象得那么直白。`
+      : `整体看，${petSubject}的态度不是简单的喜欢或不喜欢，更像是还在确认安全感。`
+    : `整体看，${petIntro}${names} 这组三张牌提示你先看清关系状态，再决定下一步。`;
 
   const summary = isPetLikeQuestion
-    ? `结合 ${names}，这件事更偏向“有好感和连接”，但不要只靠单个动作下结论。`
-    : `结合 ${names}，这组牌建议你把现状、阻碍和行动建议分开看。`;
+    ? `结合${petSubject}的牌面 ${names}，这件事更偏向“有好感和连接”，但不要只靠单个动作下结论。`
+    : `结合${petIntro}${names}，这组牌建议你把现状、阻碍和行动建议分开看。`;
 
   const oneLiner = isPetLikeQuestion
     ? "一句话：它大概率不是不喜欢，只是表达方式可能比较有自己的节奏。"
@@ -311,22 +322,39 @@ function getOrientationMeaning(orientation) {
   return "逆位不是坏事，通常表示这股能量有点卡住，需要慢一点看清。";
 }
 
-function buildQuestionMeaning(question, card) {
+function buildQuestionMeaning(question, card, pet) {
+  const petName = pet && pet.name ? pet.name : "它";
   const keywords = card.keywords || card.name;
 
   if (/喜欢|爱|亲|依赖|信任|主人|讨厌|关系/.test(question)) {
     if (card.role === "现状") {
-      return `放到这个问题里，“${keywords}”说明它和主人之间已经有明显连接。`;
+      return `放到这个问题里，“${keywords}”说明${petName}和主人之间已经有明显连接。`;
     }
 
     if (card.role === "阻碍") {
-      return "这张牌提醒你，别把短暂冷淡或小动作直接理解成不喜欢。";
+      return `这张牌提醒你，别把${petName}短暂的冷淡或小动作直接理解成不喜欢。`;
     }
 
-    return "建议你用稳定陪伴和具体互动去验证感情，而不是只靠猜。";
+    return `建议你用稳定陪伴和具体互动去验证${petName}的感情，而不是只靠猜。`;
   }
 
   return `放到“${question}”里看，重点在“${keywords}”这几个信号上。`;
+}
+
+function buildPetIntro(pet) {
+  if (!pet || !pet.name) {
+    return "";
+  }
+
+  return `关于${pet.name}这件事，`;
+}
+
+function buildPetSubject(pet) {
+  if (!pet || !pet.name) {
+    return "它";
+  }
+
+  return pet.name;
 }
 
 function ensureSentence(text) {
